@@ -77,12 +77,15 @@ INKEEP_API_KEY=your-inkeep-api-key
 
 Replace the placeholder values with your actual tokens.
 
-### 5. Deploy your app
+### 5 Adjust Slack Config
+- Adjust the `slackConfig.json` file to fit your needs. Modify the `enabledForChannels` array to enable the bot in the channels you want.
+
+### 6. Deploy your app
 
 - If building locally, follow steps in the Local Development section to tunnel your local environment and then copy the tunnel URL.
 - If deploying to Vercel, follow the instructions in the Production Deployment section and copy your deployment URL.
 
-### 6. Update your Slack App configuration:
+### 7. Update your Slack App configuration:
 
 Go to your [Slack App settings](https://api.slack.com/apps)
 
@@ -99,7 +102,7 @@ Go to your [Slack App settings](https://api.slack.com/apps)
 
 > Remember to include `/api/events` in the Request URL.
 
-### 7. Enable Interactivity
+### 8. Enable Interactivity
 
 - Go to "Interactivity & Shortcuts"
 - Enable Interactivity
