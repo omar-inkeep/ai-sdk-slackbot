@@ -145,7 +145,12 @@ export function getFollowUpActions(
 			"D",
 		);
 
-	if (slackConfig.integration.negativeFeedbackCallback && !isDM) {
+	const isAskForHelpButtonEnabled =
+		slackConfig.integration.negativeFeedbackCallback.botIds.length > 0 ||
+		slackConfig.integration.negativeFeedbackCallback.groupIds.length > 0 ||
+		slackConfig.integration.negativeFeedbackCallback.userIds.length > 0;
+
+	if (isAskForHelpButtonEnabled && !isDM) {
 		return [
 			{
 				type: "button",
