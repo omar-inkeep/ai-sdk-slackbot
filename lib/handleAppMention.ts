@@ -134,12 +134,15 @@ export async function handleAppMention(
 			};
 		}
 
+		const isAskForHelpButtonEnabled =
+			config.integration.negativeFeedbackCallback.botIds.length > 0 ||
+			config.integration.negativeFeedbackCallback.groupIds.length > 0 ||
+			config.integration.negativeFeedbackCallback.userIds.length > 0;
+
 		const stream = await initiateChat({
 			isHumanReviewingConversation:
 				config.integration.isHumanReviewingConversation || false,
-			isAskForHelpButtonEnabled: Boolean(
-				config.integration.negativeFeedbackCallback,
-			),
+			isAskForHelpButtonEnabled,
 			isDraftModeEnabled: config.integration.isDraftModeEnabled,
 			userMessageChatCompletionParts: formatUserMessageItems(
 				userMessageContentItemArray,
