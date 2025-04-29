@@ -1,26 +1,20 @@
 # AI SDK Slackbot
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fnicoalbanese%2Fai-sdk-slackbot&env=SLACK_BOT_TOKEN,SLACK_SIGNING_SECRET,OPENAI_API_KEY,EXA_API_KEY&envDescription=API%20keys%20needed%20for%20application&envLink=https%3A%2F%2Fgithub.com%2Fnicoalbanese%2Fai-sdk-slackbot%3Ftab%3Dreadme-ov-file%234-set-environment-variables&project-name=ai-sdk-slackbot)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fomar-inkeep%2Fai-sdk-slackbot&env=SLACK_BOT_TOKEN,SLACK_SIGNING_SECRET,INKEEP_API_KEY&envDescription=API%20keys%20needed%20for%20application&envLink=https%3A%2F%2Fgithub.com%2Fomar-inkeep%2Fai-sdk-slackbot%3Ftab%3Dreadme-ov-file%234-set-environment-variables&project-name=ai-sdk-slackbot)
 
 An AI-powered chatbot for Slack powered by the [AI SDK by Vercel](https://sdk.vercel.ai/docs).
 
 ## Features
 
 - Integrates with [Slack's API](https://api.slack.com) for easy Slack communication
-- Use any LLM with the AI SDK ([easily switch between providers](https://sdk.vercel.ai/providers/ai-sdk-providers))
-- Works both with app mentions and as an assistant in direct messages
+- Works both with app mentions and direct messages
 - Maintains conversation context within both threads and direct messages
-- Built-in tools for enhanced capabilities:
-  - Real-time weather lookup
-  - Web search (powered by [Exa](https://exa.ai))
-- Easily extensible architecture to add custom tools (e.g., knowledge search)
 
 ## Prerequisites
 
 - [Node.js](https://nodejs.org/) 18+ installed
 - Slack workspace with admin privileges
-- [OpenAI API key](https://platform.openai.com/api-keys)
-- [Exa API key](https://exa.ai) (for web search functionality)
+- [Inkeep API key](https://inkeep.com/docs/api-reference/introduction)
 - A server or hosting platform (e.g., [Vercel](https://vercel.com)) to deploy the bot
 
 ## Setup
@@ -45,16 +39,25 @@ pnpm install
 
 - Under "App Credentials", note down your "Signing Secret"
 
+#### App Home
+
+- Go to "App Home"
+- Enable "Messages Tab"
+- Check "Allow users to send Slash commands and messages from the messages tab"
+- Save Changes
+
 #### OAuth & Permissions
 
 - Add the following [Bot Token Scopes](https://api.slack.com/scopes):
-
   - `app_mentions:read`
-  - `assistant:write`
+  - `channels:history`
   - `chat:write`
+  - `groups:history`
+  - `chat:write.customize`
   - `im:history`
-  - `im:read`
   - `im:write`
+  - `im:read`
+  - `users.profile:read`
 
 - Install the app to your workspace and note down the "Bot User OAuth Token"
 
@@ -66,12 +69,10 @@ Create a `.env` file in the root of your project with the following:
 # Slack Credentials
 SLACK_BOT_TOKEN=xoxb-your-bot-token
 SLACK_SIGNING_SECRET=your-signing-secret
+SLACK_APP_ID=your-app-id
 
-# OpenAI Credentials
-OPENAI_API_KEY=your-openai-api-key
-
-# Exa API Key (for web search functionality)
-EXA_API_KEY=your-exa-api-key
+# Inkeep Credentials
+INKEEP_API_KEY=your-inkeep-api-key
 ```
 
 Replace the placeholder values with your actual tokens.
@@ -92,10 +93,19 @@ Go to your [Slack App settings](https://api.slack.com/apps)
 - Save Changes
 - Under "Subscribe to bot events", add:
   - `app_mention`
-  - `assistant_thread_started`
-  - `message:im`
+  - `message.channels`
+  - `message.groups`
+  - `message.im`
 
 > Remember to include `/api/events` in the Request URL.
+
+### 7. Enable Interactivity
+
+- Go to "Interactivity & Shortcuts"
+- Enable Interactivity
+- Set the Request URL to: `https://your-app.vercel.app/api/events`
+- Save Changes
+
 
 ## Local Development
 
@@ -130,8 +140,8 @@ Make sure to modify the [subscription URL](./README.md/#enable-slack-events) to 
 
    - `SLACK_BOT_TOKEN`
    - `SLACK_SIGNING_SECRET`
-   - `OPENAI_API_KEY`
-   - `EXA_API_KEY`
+   - `SLACK_APP_ID`
+   - `INKEEP_API_KEY`
 
 4. After deployment, Vercel will provide you with a production URL
 
@@ -144,8 +154,9 @@ Make sure to modify the [subscription URL](./README.md/#enable-slack-events) to 
    - Save Changes
    - Under "Subscribe to bot events", add:
      - `app_mention`
-     - `assistant_thread_started`
-     - `message:im`
+     - `message.channels`
+     - `message.groups`
+     - `message.im`
 
 ## Usage
 
@@ -155,29 +166,6 @@ The bot will respond to:
 2. Mentions - Mention your bot in a channel using `@YourBotName`
 
 The bot maintains context within both threads and direct messages, so it can follow along with the conversation.
-
-### Available Tools
-
-1. **Weather Tool**: The bot can fetch real-time weather information for any location.
-
-   - Example: "What's the weather like in London right now?"
-
-2. **Web Search**: The bot can search the web for up-to-date information using [Exa](https://exa.ai).
-   - Example: "Search for the latest news about AI technology"
-   - You can also specify a domain: "Search for the latest sports news on bbc.com"
-
-### Extending with New Tools
-
-The chatbot is built with an extensible architecture using the [AI SDK's tool system](https://sdk.vercel.ai/docs/ai-sdk-core/tools-and-tool-calling). You can easily add new tools such as:
-
-- Knowledge base search
-- Database queries
-- Custom API integrations
-- Company documentation search
-
-To add a new tool, extend the tools object in the `lib/ai.ts` file following the existing pattern.
-
-You can also disable any of the existing tools by removing the tool in the `lib/ai.ts` file.
 
 ## License
 

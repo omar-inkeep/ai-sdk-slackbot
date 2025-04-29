@@ -1,0 +1,16 @@
+{
+	"integration": {
+		"botAvatarSrcUrl": "",
+		"botName": "Ask Inkeep",
+		"enabledForChannels": ["C-your-channel-id"],
+		"isHumanReviewingConversation": false,
+		"isDraftModeEnabled": false,
+		"negativeFeedbackCallback": {
+			"userIds": [],
+			"groupIds": [],
+			"botIds": []
+		},
+		"areInlineCitationsEnabled": true
+	},
+	"customStrings": {}
+}

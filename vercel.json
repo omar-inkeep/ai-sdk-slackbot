@@ -1,13 +1,7 @@
 {
-  "redirects": [
-    {
-      "source": "/",
-      "destination": "https://github.com/nicoalbanese/ai-sdk-slackbot"
-    }
-  ],
   "functions": {
     "api/events.ts": {
-      "maxDuration": 60
+      "maxDuration": 300
     }
   },
   "outputDirectory": "dist"
