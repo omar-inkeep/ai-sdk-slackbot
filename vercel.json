@@ -1,7 +1,7 @@
 {
   "functions": {
     "api/events.ts": {
-      "maxDuration": 300
+      "maxDuration": 60
     }
   },
   "outputDirectory": "dist"
