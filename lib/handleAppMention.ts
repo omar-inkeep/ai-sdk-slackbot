@@ -26,6 +26,7 @@ export async function handleAppMention(
 	const workspaceId = event.team;
 	const threadTs = event.thread_ts || event.ts;
 	const messageAuthorId = event.user || "";
+	const messageTs = event.ts;
 
 	const isDM = (event as GenericMessageEvent).channel_type === "im";
 
@@ -204,7 +205,7 @@ export async function handleAppMention(
 			workspaceId,
 			channelId,
 			botId: botUserId,
-			messageTs: threadTs,
+			messageTs,
 			messageAuthorId,
 		});
 	}
