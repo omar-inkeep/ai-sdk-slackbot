@@ -1,8 +1,10 @@
-# AI SDK Slackbot
+# Custom Inkeep Slackbot with Node.js and Vercel
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fomar-inkeep%2Fai-sdk-slackbot&env=SLACK_BOT_TOKEN,SLACK_SIGNING_SECRET,SLACK_APP_ID,INKEEP_API_KEY&envDescription=API%20keys%20needed%20for%20application&envLink=https%3A%2F%2Fgithub.com%2Fomar-inkeep%2Fai-sdk-slackbot%3Ftab%3Dreadme-ov-file%234-set-environment-variables&project-name=ai-sdk-slackbot)
+An example repo on how to deploy your own fully customizable Slackbot that uses Inkeep.
 
-An AI-powered chatbot for Slack powered by the [AI SDK by Vercel](https://sdk.vercel.ai/docs).
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fomar-inkeep%2Finkeep-slackbot&env=SLACK_BOT_TOKEN,SLACK_SIGNING_SECRET,SLACK_APP_ID,INKEEP_API_KEY&envDescription=API%20keys%20needed%20for%20application&envLink=https%3A%2F%2Fgithub.com%2Fomar-inkeep%2Finkeep-slackbot%3Ftab%3Dreadme-ov-file%234-set-environment-variables&project-name=inkeep-slackbot)
+
+**Important:** The Deploy button creates a standalone copy of this repository. If you want to receive future updates from the original repository, first [fork this repository on GitHub](https://github.com/omar-inkeep/inkeep-slackbot/fork), then deploy your fork to Vercel.
 
 ## Features
 
@@ -14,8 +16,19 @@ An AI-powered chatbot for Slack powered by the [AI SDK by Vercel](https://sdk.ve
 
 - [Node.js](https://nodejs.org/) 18+ installed
 - Slack workspace with admin privileges
-- [Inkeep API key](https://inkeep.com/docs/api-reference/introduction)
+- Inkeep API key -- see section below for instructions.
 - A server or hosting platform (e.g., [Vercel](https://vercel.com)) to deploy the bot
+
+## Inkeep API Key
+
+- Log into the Inkeep dashboard at [https://portal.inkeep.com](https://portal.inkeep.com).
+- Navigate to the Projects section and select your project
+- Open the Integrations tab
+- Click Create Integration and choose API from the options (do not select Slack)
+- Enter a Name for your new API integration
+- Click on Create
+- A generated API key will appear
+- Add the key to Vercel's environment variables as `INKEEP_API_KEY`.
 
 ## Setup
 
@@ -38,6 +51,7 @@ pnpm install
 #### Basic Information
 
 - Under "App Credentials", note down your "Signing Secret"
+- Under the Display Information section, you can edit the App name, Short description, App icon & Preview, Background color, and the Long description.
 
 #### App Home
 
@@ -78,7 +92,7 @@ INKEEP_API_KEY=your-inkeep-api-key
 Replace the placeholder values with your actual tokens.
 
 ### 5 Adjust Slack Config
-- Adjust the `slackConfig.json` file to fit your needs. Modify the `enabledForChannels` array to enable the bot in the channels you want.
+- Adjust the `slackConfig.json` file to fit your needs. Modify the `enabledForChannels` array to enable the bot in the channels you want. This file mirrors a few options from the Slack integration page in the Inkeep dashboard.
 
 ### 6. Deploy your app
 
