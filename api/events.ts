@@ -39,9 +39,9 @@ export async function POST(request: Request) {
 				actionId === "thumbs_down_button" ||
 				actionId === "mark_as_resolved"
 			) {
-				handleThumbsUpAndDown(actions, botUserId);
+				waitUntil(handleThumbsUpAndDown(actions, botUserId));
 			} else if (actionId === "ask_for_help") {
-				handleAskForHelp(actions, botUserId);
+				waitUntil(handleAskForHelp(actions, botUserId));
 			}
 
 			return new Response("Success!", { status: 200 });

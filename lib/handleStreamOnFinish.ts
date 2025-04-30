@@ -8,14 +8,14 @@ import { getBotIdentity } from "./handleAppMention";
 
 export async function handleStreamOnFinish({
 	sources,
-	botResponseMessageId,
+	inkeepMessageId,
 	channelId,
 	threadTs,
 	messageAuthorId,
 	botId,
 }: {
 	sources: string | null;
-	botResponseMessageId?: string;
+	inkeepMessageId?: string;
 	channelId: string;
 	threadTs: string;
 	messageAuthorId: string;
@@ -27,7 +27,7 @@ export async function handleStreamOnFinish({
 				slack_channel: channelId,
 				slack_question_author_id: messageAuthorId,
 			},
-			botResponseMessageId,
+			inkeepMessageId,
 		},
 		tags: {
 			userIds: slackConfig.integration.negativeFeedbackCallback.userIds,
@@ -63,7 +63,7 @@ export type FollowUpResponseMetadata = {
 			slack_channel: string;
 			slack_question_author_id: string;
 		};
-		botResponseMessageId?: string;
+		inkeepMessageId?: string;
 	};
 	tags: {
 		userIds: string[];

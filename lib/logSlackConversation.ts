@@ -1,5 +1,11 @@
 import { InkeepAnalytics } from "@inkeep/inkeep-analytics";
-import type { CreateOpenAIConversation, Messages } from "@inkeep/inkeep-analytics/dist/commonjs/models/components";
+import type {
+	CreateOpenAIConversation,
+	Messages,
+	OpenAIConversation,
+} from "@inkeep/inkeep-analytics/dist/commonjs/models/components";
+
+type OpenAIConversationType = OpenAIConversation & { type: "openai" };
 
 export async function logSlackConversation({
 	apiIntegrationKey,
@@ -17,7 +23,7 @@ export async function logSlackConversation({
 	botId: string;
 	messageTs: string;
 	messageAuthorId: string;
-}): Promise<string | undefined> {
+}): Promise<OpenAIConversationType | undefined> {
 	const inkeepAnalytics = new InkeepAnalytics({ apiIntegrationKey });
 
 	const logConversationPayload: CreateOpenAIConversation = {
@@ -43,7 +49,7 @@ export async function logSlackConversation({
 			logConversationPayload,
 		);
 
-		return conversation.id;
+		return conversation as OpenAIConversationType;
 	} catch (err) {
 		console.error("Error logging Slack conversation", err);
 		return undefined;

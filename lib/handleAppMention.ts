@@ -8,12 +8,8 @@ import {
 } from "./templateMessages";
 import config from "../slackConfig.json";
 import type { ChatCompletionContentPart } from "openai/resources/chat/completions";
-import type {
-	Messages,
-	OpenAIContentItem,
-} from "@inkeep/inkeep-analytics/dist/commonjs/models/components";
+import type { OpenAIContentItem } from "@inkeep/inkeep-analytics/dist/commonjs/models/components";
 import { handleStream } from "./handleStream";
-import { logSlackConversation } from "./logSlackConversation";
 import { initiateChat } from "./initiateChat";
 import { handleStreamOnFinish } from "./handleStreamOnFinish";
 import slackifyMarkdown from "slackify-markdown";
@@ -23,12 +19,13 @@ export async function handleAppMention(
 	botUserId: string,
 ) {
 	const channelId = event.channel;
-	const workspaceId = event.team;
+	const workspaceId = event.team || "";
 	const threadTs = event.thread_ts || event.ts;
 	const messageAuthorId = event.user || "";
 	const messageTs = event.ts;
 
 	const isDM = (event as GenericMessageEvent).channel_type === "im";
+	const customStrings = config.customStrings as CustomStringsType;
 
 	const userMessage = stripTagsAndTrim(event.text || "");
 	const userMessageContentItemArray: OpenAIContentItem[] = [
@@ -38,13 +35,9 @@ export async function handleAppMention(
 		},
 	];
 
-	const messagesToLogToAnalytics: Messages[] = [];
-
 	const isThreaded = threadTs !== event.ts;
 
 	let isNewChat = !isThreaded;
-
-	const customStrings = config.customStrings as CustomStringsType;
 
 	try {
 		if (isThreaded) {
@@ -52,7 +45,7 @@ export async function handleAppMention(
 				await getThreadMessageHistoryContext(client, channelId, threadTs);
 
 			if (messageHistoryContext) {
-				userMessageContentItemArray.push({
+				userMessageContentItemArray.unshift({
 					type: "text",
 					text: messageHistoryContext,
 				});
@@ -60,11 +53,6 @@ export async function handleAppMention(
 
 			isNewChat = !isBotInThread;
 		}
-
-		messagesToLogToAnalytics.push({
-			content: userMessageContentItemArray,
-			role: "user",
-		});
 
 		if (!userMessage && customStrings.noQuestion !== "") {
 			await client.chat.postMessage({
@@ -87,7 +75,7 @@ export async function handleAppMention(
 			await client.chat.postMessage({
 				text: TEMPLATE_MESSAGES.botNotEnabledForChannel({
 					channelId,
-					workspaceId: workspaceId ?? "",
+					workspaceId,
 				}),
 				channel: channelId,
 				thread_ts: threadTs,
@@ -118,7 +106,7 @@ export async function handleAppMention(
 				includePleaseTagInkeepInIntro: false,
 			});
 
-		let botImmediateReplyContent: OpenAIContentItem | null = null;
+		let botImmediateReplyContent: OpenAIContentItem | undefined;
 		if (customStrings.immediateReply !== "") {
 			await client.chat.postMessage({
 				text: immediateReplyText,
@@ -150,32 +138,20 @@ export async function handleAppMention(
 			isThreaded,
 		});
 
-		const { message, sources, botResponseMessageId, links } =
-			await handleStream({
-				stream,
-				channelId,
-				threadTs,
-				botId: botUserId,
-			});
-
-		const content: OpenAIContentItem[] = [
-			...(botImmediateReplyContent ? [botImmediateReplyContent] : []),
-			{
-				type: "text",
-				text: message,
-			},
-			...(sources ? [{ type: "text" as const, text: sources }] : []),
-		];
-
-		messagesToLogToAnalytics.push({
-			content,
-			role: "assistant",
-			externalId: botResponseMessageId,
-			links,
+		const { sources, inkeepMessageId } = await handleStream({
+			stream,
+			channelId,
+			threadTs,
+			botId: botUserId,
+			userMessageContentItemArray,
+			botImmediateReplyContent,
+			workspaceId,
+			userMessageTs: messageTs,
+			userMessageAuthorId: messageAuthorId,
 		});
 
 		await handleStreamOnFinish({
-			botResponseMessageId,
+			inkeepMessageId,
 			sources,
 			channelId,
 			threadTs,
@@ -194,23 +170,6 @@ export async function handleAppMention(
 				})),
 			});
 		}
-	}
-
-	console.log(
-		"messagesToLogToAnalytics",
-		JSON.stringify(messagesToLogToAnalytics, null, 2),
-	);
-
-	if (workspaceId && process.env.INKEEP_API_KEY) {
-		logSlackConversation({
-			apiIntegrationKey: process.env.INKEEP_API_KEY,
-			messagesToLogToAnalytics,
-			workspaceId,
-			channelId,
-			botId: botUserId,
-			messageTs,
-			messageAuthorId,
-		});
 	}
 }
 

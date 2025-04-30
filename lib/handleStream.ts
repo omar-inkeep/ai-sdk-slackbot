@@ -7,19 +7,36 @@ import type { ChatCompletionChunk } from "openai/resources/chat/completions";
 import slackConfig from "../slackConfig.json";
 import { getBotIdentity } from "./handleAppMention";
 import { client } from "./slack-utils";
+import { logSlackConversation } from "./logSlackConversation";
+import type {
+	Messages,
+	OpenAIContentItem,
+} from "@inkeep/inkeep-analytics/dist/commonjs/models/components";
+
+type HandleStreamInput = {
+	stream: Stream<ChatCompletionChunk>;
+	channelId: string;
+	threadTs: string;
+	workspaceId: string;
+	userMessageTs: string;
+	userMessageAuthorId: string;
+	userMessageContentItemArray: OpenAIContentItem[];
+	botId: string;
+	botImmediateReplyContent?: OpenAIContentItem;
+};
 
 async function updateSlackMessage({
 	channelId,
 	threadTs,
 	botId,
 	messageText,
-	firstMessageTs,
+	botResponseMessageTs,
 }: {
 	channelId: string;
 	threadTs: string;
 	botId: string;
 	messageText: string;
-	firstMessageTs?: string;
+	botResponseMessageTs?: string;
 }) {
 	const commonParams = {
 		channel: channelId,
@@ -28,12 +45,12 @@ async function updateSlackMessage({
 		text: messageText,
 	};
 
-	if (firstMessageTs) {
+	if (botResponseMessageTs) {
 		await client.chat.update({
 			...commonParams,
-			ts: firstMessageTs,
+			ts: botResponseMessageTs,
 		});
-		return firstMessageTs;
+		return botResponseMessageTs;
 	}
 
 	const firstResponse = await client.chat.postMessage({
@@ -51,16 +68,16 @@ export async function handleStream({
 	stream,
 	channelId,
 	threadTs,
+	workspaceId,
+	userMessageTs,
+	userMessageAuthorId,
+	userMessageContentItemArray,
 	botId,
-}: {
-	stream: Stream<ChatCompletionChunk>;
-	channelId: string;
-	threadTs: string;
-	botId: string;
-}): Promise<{
+	botImmediateReplyContent,
+}: HandleStreamInput): Promise<{
 	message: string;
 	sources: string | null;
-	botResponseMessageId?: string;
+	inkeepMessageId?: string;
 	links: QALinks;
 }> {
 	const areInlineCitationsEnabled =
@@ -69,7 +86,7 @@ export async function handleStream({
 	const customStrings = slackConfig.customStrings as CustomStringsType;
 
 	let accumulatedText = "";
-	let firstMessageTs: string | undefined;
+	let botResponseMessageTs: string | undefined;
 	const finalToolCalls: Record<
 		number,
 		NonNullable<ChatCompletionChunk["choices"][0]["delta"]["tool_calls"]>[0]
@@ -97,12 +114,12 @@ export async function handleStream({
 				const wholeBody = slackifyMarkdown(body);
 
 				if (wholeBody) {
-					firstMessageTs = await updateSlackMessage({
+					botResponseMessageTs = await updateSlackMessage({
 						channelId,
 						threadTs,
 						botId,
 						messageText: wholeBody,
-						firstMessageTs,
+						botResponseMessageTs,
 					});
 				}
 			} catch (error) {
@@ -137,18 +154,60 @@ export async function handleStream({
 		sources = sourcesResult;
 
 		if (wholeBody) {
-			firstMessageTs = await updateSlackMessage({
+			botResponseMessageTs = await updateSlackMessage({
 				channelId,
 				threadTs,
 				botId,
 				messageText: wholeBody,
-				firstMessageTs,
+				botResponseMessageTs,
 			});
+		}
+
+		const assistantContent: OpenAIContentItem[] = [
+			...(botImmediateReplyContent ? [botImmediateReplyContent] : []),
+			{
+				type: "text",
+				text: accumulatedText,
+			},
+			...(sources ? [{ type: "text" as const, text: sources }] : []),
+		];
+
+		const messagesToLogToAnalytics: Messages[] = [
+			{
+				content: userMessageContentItemArray,
+				role: "user",
+			},
+			{
+				content: assistantContent,
+				role: "assistant",
+				externalId: botResponseMessageTs,
+				links,
+			},
+		];
+
+		let inkeepMessageId: string | undefined;
+
+		if (process.env.INKEEP_API_KEY) {
+			const loggedConversation = await logSlackConversation({
+				apiIntegrationKey: process.env.INKEEP_API_KEY,
+				messagesToLogToAnalytics,
+				workspaceId,
+				channelId,
+				botId,
+				messageTs: userMessageTs,
+				messageAuthorId: userMessageAuthorId,
+			});
+
+			if (loggedConversation) {
+				inkeepMessageId = loggedConversation.messages.find(
+					(message) => message.externalId === botResponseMessageTs,
+				)?.id;
+			}
 		}
 
 		return {
 			message: accumulatedText,
-			botResponseMessageId: firstMessageTs,
+			inkeepMessageId,
 			sources,
 			links,
 		};
@@ -156,7 +215,7 @@ export async function handleStream({
 		console.error("Error in final message processing", error, accumulatedText);
 		return {
 			message: accumulatedText,
-			botResponseMessageId: firstMessageTs,
+			inkeepMessageId: undefined,
 			sources: null,
 			links,
 		};

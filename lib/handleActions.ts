@@ -36,15 +36,14 @@ export async function handleThumbsUpAndDown(
 	if (
 		thread_ts &&
 		typeof thread_ts === "string" &&
-		parsedValue.properties.botResponseMessageId &&
+		parsedValue.properties.inkeepMessageId &&
 		process.env.INKEEP_API_KEY
 	) {
 		logSlackFeedback({
 			apiIntegrationKey: process.env.INKEEP_API_KEY,
-			conversationExternalId: thread_ts,
-			messageId: parsedValue.properties.botResponseMessageId,
+			inkeepMessageId: parsedValue.properties.inkeepMessageId,
 			messageAuthorId: slack_question_author_id,
-			type: actionId === "thumbs_down_button" ? "negative" : "positive",
+			feedbackType: actionId === "thumbs_down_button" ? "negative" : "positive",
 		});
 	}
 
@@ -68,24 +67,26 @@ export async function handleThumbsUpAndDown(
 		thread_ts &&
 		actionId === "mark_as_resolved" &&
 		customStrings.markAsResolved === ""
-	  ) {
+	) {
 		return;
-	  }
+	}
 
 	const actionIdToText = {
-		thumbs_up_button: customStrings.positiveFeedback ?? TEMPLATE_MESSAGES.positiveFeedback,
-		thumbs_down_button: customStrings.negativeFeedback ?? TEMPLATE_MESSAGES.negativeFeedback,
-		mark_as_resolved: customStrings.markAsResolved ?? TEMPLATE_MESSAGES.markAsResolved,
-	}
+		thumbs_up_button:
+			customStrings.positiveFeedback ?? TEMPLATE_MESSAGES.positiveFeedback,
+		thumbs_down_button:
+			customStrings.negativeFeedback ?? TEMPLATE_MESSAGES.negativeFeedback,
+		mark_as_resolved:
+			customStrings.markAsResolved ?? TEMPLATE_MESSAGES.markAsResolved,
+	};
 
 	await client.chat.postMessage({
 		text: actionIdToText[actionId],
 		thread_ts,
 		channel: slackEvent.slack_channel,
-		...(slackConfig &&
-			(await getBotIdentity({
-				botId: botUserId,
-			}))),
+		...(await getBotIdentity({
+			botId: botUserId,
+		})),
 	});
 }
 
@@ -113,15 +114,14 @@ export async function handleAskForHelp(
 	if (
 		thread_ts &&
 		typeof thread_ts === "string" &&
-		parsedValue.properties.botResponseMessageId &&
+		parsedValue.properties.inkeepMessageId &&
 		process.env.INKEEP_API_KEY
 	) {
 		logSlackFeedback({
 			apiIntegrationKey: process.env.INKEEP_API_KEY,
-			conversationExternalId: thread_ts,
-			messageId: parsedValue.properties.botResponseMessageId,
+			inkeepMessageId: parsedValue.properties.inkeepMessageId,
 			messageAuthorId: slack_question_author_id,
-			type: "negative",
+			feedbackType: "negative",
 		});
 	}
 
@@ -136,10 +136,9 @@ export async function handleAskForHelp(
 			text,
 			thread_ts,
 			channel: slackEvent.slack_channel,
-			...(slackConfig &&
-				(await getBotIdentity({
-					botId: botUserId,
-				}))),
+			...(await getBotIdentity({
+				botId: botUserId,
+			})),
 		});
 	}
 }
